@@ -1,0 +1,73 @@
+name: CI - Validate PostgreSQL schema & seed
+
+on:
+  push:
+    branches: [ main, dev ]
+  pull_request:
+
+jobs:
+  test-postgres:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:14
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: alx_airbnb
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U postgres -d alx_airbnb"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install psql client
+        run: sudo apt-get update && sudo apt-get install -y postgresql-client
+
+      - name: Wait for Postgres
+        run: |
+          for i in {1..30}; do
+            pg_isready -h localhost -p 5432 -U postgres -d alx_airbnb && break
+            sleep 2
+          done
+
+      # Safety-net: ensure the UUID extension exists in CI
+      - name: Enable uuid-ossp
+        env:
+          PGPASSWORD: postgres
+        run: |
+          psql "postgres://postgres:postgres@localhost:5432/alx_airbnb" -c 'CREATE EXTENSION IF NOT EXISTS "uuid-ossp";'
+
+      - name: Apply schema.sql
+        env:
+          PGPASSWORD: postgres
+        run: |
+          psql "postgres://postgres:postgres@localhost:5432/alx_airbnb" -f sql/schema.sql
+
+      - name: Apply seed.sql
+        env:
+          PGPASSWORD: postgres
+        run: |
+          psql "postgres://postgres:postgres@localhost:5432/alx_airbnb" -f sql/seed.sql
+
+      - name: Sanity checks
+        env:
+          PGPASSWORD: postgres
+        run: |
+          psql "postgres://postgres:postgres@localhost:5432/alx_airbnb" -c "SELECT COUNT(*) AS users FROM users;"
+          psql "postgres://postgres:postgres@localhost:5432/alx_airbnb" -c "SELECT COUNT(*) AS properties FROM properties;"
+          psql "postgres://postgres:postgres@localhost:5432/alx_airbnb" -c "SELECT COUNT(*) AS bookings FROM bookings;"
+          psql "postgres://postgres:postgres@localhost:5432/alx_airbnb" -c "
+            SELECT u.email, p.name, b.start_date, b.end_date
+            FROM bookings b
+            JOIN users u ON u.user_id = b.user_id
+            JOIN properties p ON p.property_id = b.property_id
+            LIMIT 5;
+          "

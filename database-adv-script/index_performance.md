@@ -1,18 +1,19 @@
-# Index Performance — ALX Airbnb
+# Optimization Report — Complex Booking Query
 
-This document shows the indexes we created and how to measure performance before and after using them.
+## 1. Initial Query
+The initial query retrieves:
+- Bookings
+- User (guest) details
+- Property details
+- Payment details
+
+It joins **4 tables** and uses `SELECT *`-style output.  
+Without filters, this forces PostgreSQL to scan large parts of the **bookings** table and sort a lot of rows.
 
 ---
 
-## 1. Indexes Created
-We identified high-usage columns in **users**, **properties**, and **bookings**.  
-See `database_index.sql` for the full SQL with `CREATE INDEX` commands:
-
+## 2. Performance Analysis
+Run with:
 ```sql
-CREATE INDEX idx_users_email       ON users(email);
-CREATE INDEX idx_users_role        ON users(role);
-CREATE INDEX idx_properties_host   ON properties(host_id);
-CREATE INDEX idx_properties_price  ON properties(price_per_night);
-CREATE INDEX idx_bookings_user     ON bookings(user_id);
-CREATE INDEX idx_bookings_property ON bookings(property_id);
-CREATE INDEX idx_bookings_status   ON bookings(status);
+EXPLAIN ANALYZE
+-- initial query (see perfomance.sql)

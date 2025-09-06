@@ -1,5 +1,4 @@
 -- Aggregations & Window Functions — ALX Airbnb Database (PostgreSQL)
--- Demonstrates COUNT + GROUP BY and ranking with window functions.
 
 -- =========================================================
 -- 1) Aggregation: total number of bookings per user
@@ -17,16 +16,17 @@ GROUP BY u.user_id, u.first_name, u.last_name, u.email
 ORDER BY total_bookings DESC;
 
 -- =========================================================
--- 2) Window function: rank properties by total bookings
+-- 2) Window functions: rank properties by total bookings
 -- =========================================================
 SELECT
   p.property_id,
   p.name              AS property_name,
   p.location,
   COUNT(b.booking_id) AS booking_count,
-  RANK() OVER (ORDER BY COUNT(b.booking_id) DESC) AS booking_rank
+  ROW_NUMBER() OVER (ORDER BY COUNT(b.booking_id) DESC) AS row_number_rank,
+  RANK()       OVER (ORDER BY COUNT(b.booking_id) DESC) AS dense_rank
 FROM properties p
 LEFT JOIN bookings b
   ON p.property_id = b.property_id
 GROUP BY p.property_id, p.name, p.location
-ORDER BY booking_rank, property_name;
+ORDER BY booking_count DESC, property_name;

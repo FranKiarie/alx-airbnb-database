@@ -1,26 +1,18 @@
-# Index Performance — ALX Airbnb (PostgreSQL)
+# Index Performance — ALX Airbnb
 
-This note documents indexes we added **and** a before/after measurement using **EXPLAIN ANALYZE**.
-
----
-
-## Index targets (high-usage columns)
-- **users**: `email` (login lookups), `role` (admin filters), `created_at` (recent users)
-- **properties**: `host_id` (host dashboards), `price_per_night` (sorting), `created_at`
-- **bookings**: `user_id`, `property_id`, `status`, `created_at`, `(property_id, start_date, end_date)` for date-window searches
-
-See `database_index.sql` for the `CREATE INDEX` SQL.
+This document shows the indexes we created and how to measure performance before and after using them.
 
 ---
 
-## Measure performance: BEFORE indexes
-Run this **before** applying indexes:
+## 1. Indexes Created
+We identified high-usage columns in **users**, **properties**, and **bookings**.  
+See `database_index.sql` for the full SQL with `CREATE INDEX` commands:
 
 ```sql
-EXPLAIN ANALYZE
-SELECT p.property_id, p.name, COUNT(b.booking_id) AS bookings
-FROM properties p
-LEFT JOIN bookings b ON b.property_id = p.property_id
-GROUP BY p.property_id, p.name
-ORDER BY bookings DESC
-LIMIT 20;
+CREATE INDEX idx_users_email       ON users(email);
+CREATE INDEX idx_users_role        ON users(role);
+CREATE INDEX idx_properties_host   ON properties(host_id);
+CREATE INDEX idx_properties_price  ON properties(price_per_night);
+CREATE INDEX idx_bookings_user     ON bookings(user_id);
+CREATE INDEX idx_bookings_property ON bookings(property_id);
+CREATE INDEX idx_bookings_status   ON bookings(status);

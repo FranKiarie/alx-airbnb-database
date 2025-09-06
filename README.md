@@ -22,4 +22,5 @@ The project simulates building a **production-grade database** that could suppor
 
 ## 📐 ERD (Entity Relationship Diagram)
 The database design is based on this Miro ERD:  
-👉 [View]()
+👉 https://miro.com/app/board/uXjVJQKDO-4=/?share_link_id=678778318360
+
